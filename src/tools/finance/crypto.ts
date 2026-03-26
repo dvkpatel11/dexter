@@ -13,15 +13,15 @@ const CryptoPriceSnapshotInputSchema = z.object({
 
 export const getCryptoPriceSnapshot = new DynamicStructuredTool({
   name: 'get_crypto_price_snapshot',
-  description: `Fetches the most recent price snapshot for a cryptocurrency. Ticker format: 'X:BTCUSD' for Bitcoin/USD, 'X:ETHUSD' for Ethereum/USD.`,
+  description: `Fetches the most recent daily price bar for a cryptocurrency. Ticker format: 'X:BTCUSD' for Bitcoin/USD, 'X:ETHUSD' for Ethereum/USD.`,
   schema: CryptoPriceSnapshotInputSchema,
   func: async (input) => {
     const ticker = input.ticker.trim().toUpperCase();
     const { data, url } = await api.get(
-      `/v2/snapshot/locale/global/markets/crypto/tickers/${ticker}`,
+      `/v2/aggs/ticker/${ticker}/prev`,
     );
-    const snapshot = (data.ticker as Record<string, unknown>) || {};
-    return formatToolResult(snapshot, [url]);
+    const results = (data.results as Record<string, unknown>[]) || [];
+    return formatToolResult(results[0] || {}, [url]);
   },
 });
 

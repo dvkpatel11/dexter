@@ -1,6 +1,6 @@
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { api } from './api.js';
+import { edgarSearch } from './api.js';
 import { formatToolResult } from '../types.js';
 
 const FilingsInputSchema = z.object({
@@ -21,17 +21,16 @@ const FilingsInputSchema = z.object({
 
 export const getFilings = new DynamicStructuredTool({
   name: 'get_filings',
-  description: `Retrieves SEC filing metadata for a company via Polygon, including filing type, filing date, accession number, and document URLs. Use to find filings and their EDGAR links. This tool returns metadata only — follow the source URLs to read actual filing content.`,
+  description: `Retrieves SEC filing metadata for a company via EDGAR full-text search, including filing type, filing date, and document URLs. Use to find filings and their EDGAR links. This tool returns metadata only — follow the source URLs to read actual filing content.`,
   schema: FilingsInputSchema,
   func: async (input) => {
-    const params: Record<string, string | number | string[] | undefined> = {
-      ticker: input.ticker.trim().toUpperCase(),
-      limit: input.limit,
-      type: input.filing_type?.join(','),
-      order: 'desc',
-      sort: 'filing_date',
+    const ticker = input.ticker.trim().toUpperCase();
+    const params: Record<string, string | number | undefined> = {
+      q: `"${ticker}"`,
+      forms: input.filing_type?.join(','),
     };
-    const { data, url } = await api.get('/vX/reference/filings', params);
-    return formatToolResult(data.results || [], [url]);
+    const { data, url } = await edgarSearch.get(params, `${ticker} filings`);
+    const hits = (data.hits as Record<string, unknown>[]) || [];
+    return formatToolResult(hits.slice(0, input.limit), [url]);
   },
 });

@@ -19,9 +19,9 @@ export const getSegmentedRevenues = new DynamicStructuredTool({
     const ticker = input.ticker.trim().toUpperCase();
     const endpoint =
       input.segment_type === 'geographic'
-        ? `/revenue-geographic-segmentation/${ticker}`
-        : `/revenue-product-segmentation/${ticker}`;
-    const { data, url } = await fmp.get(endpoint, { structure: 'flat' });
+        ? '/revenue-geographic-segmentation'
+        : '/revenue-product-segmentation';
+    const { data, url } = await fmp.get(endpoint, { symbol: ticker, structure: 'flat' });
     return formatToolResult(Array.isArray(data) ? data : [], [url]);
   },
 });

@@ -14,7 +14,7 @@ export const getKeyRatios = new DynamicStructuredTool({
   }),
   func: async (input) => {
     const ticker = input.ticker.trim().toUpperCase();
-    const { data, url } = await fmp.get(`/key-metrics-ttm/${ticker}`);
+    const { data, url } = await fmp.get('/key-metrics-ttm', { symbol: ticker });
     const metrics = Array.isArray(data) ? data[0] : data;
     return formatToolResult(metrics || {}, [url]);
   },
@@ -38,7 +38,8 @@ export const getHistoricalKeyRatios = new DynamicStructuredTool({
   }),
   func: async (input) => {
     const ticker = input.ticker.trim().toUpperCase();
-    const { data, url } = await fmp.get(`/key-metrics/${ticker}`, {
+    const { data, url } = await fmp.get('/key-metrics', {
+      symbol: ticker,
       period: input.period,
       limit: input.limit,
     });

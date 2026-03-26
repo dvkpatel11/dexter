@@ -5,8 +5,9 @@ import { logger } from '../../utils/logger.js';
 
 const POLYGON_BASE = 'https://api.polygon.io';
 const FINNHUB_BASE = 'https://finnhub.io/api/v1';
-const FMP_BASE = 'https://financialmodelingprep.com/api/v3';
+const FMP_BASE = 'https://financialmodelingprep.com/stable';
 const SEC_EDGAR_BASE = 'https://data.sec.gov';
+const SEC_EFTS_BASE = 'https://efts.sec.gov';
 
 export interface ApiResponse {
   data: Record<string, unknown>;
@@ -238,6 +239,28 @@ export const edgar = {
     });
 
     return { data: data as Record<string, unknown>, url };
+  },
+};
+
+// ── SEC EDGAR EFTS (full-text search for filings) ───────────────────────────
+
+export const edgarSearch = {
+  async get(
+    params: Record<string, string | number | undefined>,
+    label?: string,
+  ): Promise<ApiResponse> {
+    const url = buildUrl(SEC_EFTS_BASE, '/LATEST/search-index', params);
+    const requestLabel = label || 'EFTS search';
+    const userAgent = process.env.SEC_EDGAR_USER_AGENT || 'Dexter support@dexter.ai';
+
+    const data = await executeRequest('SEC EDGAR', url.toString(), requestLabel, {
+      headers: {
+        'User-Agent': userAgent,
+        'Accept': 'application/json',
+      },
+    });
+
+    return { data, url: url.toString() };
   },
 };
 

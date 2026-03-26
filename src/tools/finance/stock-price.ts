@@ -4,7 +4,7 @@ import { api } from './api.js';
 import { formatToolResult } from '../types.js';
 
 export const STOCK_PRICE_DESCRIPTION = `
-Fetches current stock price snapshots for equities, including open, high, low, close prices, volume, and market cap. Powered by Polygon.io.
+Fetches the most recent stock price data for equities, including open, high, low, close prices, and volume. Powered by Polygon.io.
 `.trim();
 
 const StockPriceInputSchema = z.object({
@@ -16,15 +16,15 @@ const StockPriceInputSchema = z.object({
 export const getStockPrice = new DynamicStructuredTool({
   name: 'get_stock_price',
   description:
-    'Fetches the current stock price snapshot for an equity ticker, including open, high, low, close prices, volume, and market cap.',
+    'Fetches the most recent daily price bar for an equity ticker, including open, high, low, close prices and volume.',
   schema: StockPriceInputSchema,
   func: async (input) => {
     const ticker = input.ticker.trim().toUpperCase();
     const { data, url } = await api.get(
-      `/v2/snapshot/locale/us/markets/stocks/tickers/${ticker}`,
+      `/v2/aggs/ticker/${ticker}/prev`,
     );
-    const snapshot = (data.ticker as Record<string, unknown>) || {};
-    return formatToolResult(snapshot, [url]);
+    const results = (data.results as Record<string, unknown>[]) || [];
+    return formatToolResult(results[0] || {}, [url]);
   },
 });
 
