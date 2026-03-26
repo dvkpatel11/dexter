@@ -203,7 +203,7 @@ async function testFmp(): Promise<void> {
 
   // Analyst estimates
   await runTest('FMP', 'Analyst Estimates', async () => {
-    const { data, url } = await fmp.get('/analyst-estimates', {
+    const { data, url } = await fmp.get('/financial-estimates', {
       symbol: TICKER,
       period: 'annual',
       limit: 3,
@@ -231,12 +231,12 @@ async function testFmp(): Promise<void> {
 
   // Stock screener
   await runTest('FMP', 'Stock Screener', async () => {
-    const { data, url } = await fmp.get('/stock-screener', {
+    const { data, url } = await fmp.get('/search-company-screener', {
       marketCapMoreThan: 100000000000,
       sector: 'Technology',
       limit: 5,
     });
-    return { data, url };
+    return { data: Array.isArray(data) ? data : [], url };
   });
 }
 

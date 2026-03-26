@@ -21,7 +21,7 @@ export const getAnalystEstimates = new DynamicStructuredTool({
   }),
   func: async (input) => {
     const ticker = input.ticker.trim().toUpperCase();
-    const { data, url } = await fmp.get('/analyst-estimates', {
+    const { data, url } = await fmp.get('/financial-estimates', {
       symbol: ticker,
       period: input.period,
       limit: input.limit,
