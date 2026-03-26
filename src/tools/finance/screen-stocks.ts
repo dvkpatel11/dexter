@@ -142,7 +142,7 @@ export function createScreenStocks(model: string): DynamicStructuredTool {
             queryParams[key] = typeof value === 'boolean' ? String(value) : (value as string | number);
           }
         }
-        const { data, url } = await fmp.get('/stock-screener', queryParams);
+        const { data, url } = await fmp.get('/search-company-screener', queryParams);
         return formatToolResult(Array.isArray(data) ? data : [], [url]);
       } catch (error) {
         return formatToolResult(

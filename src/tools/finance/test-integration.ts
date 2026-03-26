@@ -90,10 +90,11 @@ async function testPolygon(): Promise<void> {
 
   console.log('\n  Testing Polygon.io...');
 
-  // Stock price snapshot
-  await runTest('Polygon', 'Stock Snapshot', async () => {
-    const { data, url } = await api.get(`/v2/snapshot/locale/us/markets/stocks/tickers/${TICKER}`);
-    return { data: data.ticker, url };
+  // Stock price (previous day close)
+  await runTest('Polygon', 'Stock Price (prev close)', async () => {
+    const { data, url } = await api.get(`/v2/aggs/ticker/${TICKER}/prev`);
+    const results = (data.results as unknown[]) || [];
+    return { data: results[0] || {}, url };
   });
 
   // Historical stock prices
@@ -116,10 +117,11 @@ async function testPolygon(): Promise<void> {
     return { data: data.results, url };
   });
 
-  // Crypto snapshot
-  await runTest('Polygon', 'Crypto Snapshot', async () => {
-    const { data, url } = await api.get('/v2/snapshot/locale/global/markets/crypto/tickers/X:BTCUSD');
-    return { data: data.ticker, url };
+  // Crypto price (previous day close)
+  await runTest('Polygon', 'Crypto Price (prev close)', async () => {
+    const { data, url } = await api.get('/v2/aggs/ticker/X:BTCUSD/prev');
+    const results = (data.results as unknown[]) || [];
+    return { data: results[0] || {}, url };
   });
 
   // Crypto historical
@@ -152,14 +154,15 @@ async function testPolygon(): Promise<void> {
     return { data: data.results, url };
   });
 
-  // Filings
-  await runTest('Polygon', 'SEC Filings', async () => {
-    const { data, url } = await api.get('/vX/reference/filings', {
-      ticker: TICKER,
-      limit: 3,
-      type: '10-K',
-    });
-    return { data: data.results, url };
+  // Filings (via EDGAR EFTS search)
+  await runTest('Polygon', 'SEC Filings (EDGAR)', async () => {
+    const { edgarSearch } = await import('./api.js');
+    const { data, url } = await edgarSearch.get({
+      q: `"${TICKER}"`,
+      forms: '10-K',
+    }, `${TICKER} filings`);
+    const hits = (data.hits as unknown[]) || [];
+    return { data: hits.slice(0, 3), url };
   });
 }
 
@@ -177,14 +180,15 @@ async function testFmp(): Promise<void> {
 
   // Key metrics TTM (snapshot)
   await runTest('FMP', 'Key Metrics TTM', async () => {
-    const { data, url } = await fmp.get(`/key-metrics-ttm/${TICKER}`);
+    const { data, url } = await fmp.get('/key-metrics-ttm', { symbol: TICKER });
     const metrics = Array.isArray(data) ? data[0] : data;
     return { data: metrics, url };
   });
 
   // Key metrics (historical)
   await runTest('FMP', 'Key Metrics (historical)', async () => {
-    const { data, url } = await fmp.get(`/key-metrics/${TICKER}`, {
+    const { data, url } = await fmp.get('/key-metrics', {
+      symbol: TICKER,
       period: 'annual',
       limit: 3,
     });
@@ -193,13 +197,14 @@ async function testFmp(): Promise<void> {
 
   // Earnings surprises
   await runTest('FMP', 'Earnings Surprises', async () => {
-    const { data, url } = await fmp.get(`/earnings-surprises/${TICKER}`);
+    const { data, url } = await fmp.get('/earnings-surprises', { symbol: TICKER });
     return { data, url };
   });
 
   // Analyst estimates
   await runTest('FMP', 'Analyst Estimates', async () => {
-    const { data, url } = await fmp.get(`/analyst-estimates/${TICKER}`, {
+    const { data, url } = await fmp.get('/financial-estimates', {
+      symbol: TICKER,
       period: 'annual',
       limit: 3,
     });
@@ -208,7 +213,8 @@ async function testFmp(): Promise<void> {
 
   // Revenue segmentation (product)
   await runTest('FMP', 'Revenue Segmentation (product)', async () => {
-    const { data, url } = await fmp.get(`/revenue-product-segmentation/${TICKER}`, {
+    const { data, url } = await fmp.get('/revenue-product-segmentation', {
+      symbol: TICKER,
       structure: 'flat',
     });
     return { data, url };
@@ -216,7 +222,8 @@ async function testFmp(): Promise<void> {
 
   // Revenue segmentation (geographic)
   await runTest('FMP', 'Revenue Segmentation (geographic)', async () => {
-    const { data, url } = await fmp.get(`/revenue-geographic-segmentation/${TICKER}`, {
+    const { data, url } = await fmp.get('/revenue-geographic-segmentation', {
+      symbol: TICKER,
       structure: 'flat',
     });
     return { data, url };
@@ -224,12 +231,12 @@ async function testFmp(): Promise<void> {
 
   // Stock screener
   await runTest('FMP', 'Stock Screener', async () => {
-    const { data, url } = await fmp.get('/stock-screener', {
+    const { data, url } = await fmp.get('/search-company-screener', {
       marketCapMoreThan: 100000000000,
       sector: 'Technology',
       limit: 5,
     });
-    return { data, url };
+    return { data: Array.isArray(data) ? data : [], url };
   });
 }
 

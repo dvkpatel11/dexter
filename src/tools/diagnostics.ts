@@ -81,12 +81,12 @@ async function checkPolygon(): Promise<CheckResult> {
 
   try {
     const { ms } = await timed(() =>
-      fetch(`https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/AAPL?apiKey=${process.env[envVar]}`).then((r) => {
+      fetch(`https://api.polygon.io/v2/aggs/ticker/AAPL/prev?apiKey=${process.env[envVar]}`).then((r) => {
         if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
         return r;
       }),
     );
-    return { name: 'Polygon.io', status: 'pass', detail: 'Key valid, AAPL snapshot OK', latencyMs: ms };
+    return { name: 'Polygon.io', status: 'pass', detail: 'Key valid, AAPL prev close OK', latencyMs: ms };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { name: 'Polygon.io', status: 'fail', detail: `Key set but request failed: ${msg}` };
@@ -129,7 +129,7 @@ async function checkFmp(): Promise<CheckResult> {
 
   try {
     const { ms } = await timed(() =>
-      fetch(`https://financialmodelingprep.com/api/v3/key-metrics-ttm/AAPL?apikey=${process.env[envVar]}`).then((r) => {
+      fetch(`https://financialmodelingprep.com/stable/key-metrics-ttm?symbol=AAPL&apikey=${process.env[envVar]}`).then((r) => {
         if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
         return r;
       }),

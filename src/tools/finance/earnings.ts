@@ -14,7 +14,7 @@ export const getEarnings = new DynamicStructuredTool({
   }),
   func: async (input) => {
     const ticker = input.ticker.trim().toUpperCase();
-    const { data, url } = await fmp.get(`/earnings-surprises/${ticker}`);
+    const { data, url } = await fmp.get('/earnings-surprises', { symbol: ticker });
     return formatToolResult(Array.isArray(data) ? data : [], [url]);
   },
 });
