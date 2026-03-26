@@ -5,7 +5,9 @@
  * Also handles bold text formatting.
  */
 
-import chalk from 'chalk';
+// ANSI bold escape — avoids importing chalk into a backend-shared module.
+const BOLD_ON = '\x1b[1m';
+const BOLD_OFF = '\x1b[22m';
 
 // Box-drawing characters
 const BOX = {
@@ -211,7 +213,7 @@ export function transformMarkdownTables(content: string): string {
  * Transform markdown bold (**text**) to ANSI bold.
  */
 export function transformBold(content: string): string {
-  return content.replace(/\*\*([^*]+)\*\*/g, (_, text) => chalk.bold(text));
+  return content.replace(/\*\*([^*]+)\*\*/g, (_, text) => `${BOLD_ON}${text}${BOLD_OFF}`);
 }
 
 /**

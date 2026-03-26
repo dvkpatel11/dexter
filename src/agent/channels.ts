@@ -66,10 +66,37 @@ const WHATSAPP_PROFILE: ChannelProfile = {
   tables: null,
 };
 
+const API_PROFILE: ChannelProfile = {
+  label: 'API',
+  preamble: 'Your output is consumed programmatically via a REST API. Return structured, complete answers.',
+  behavior: [
+    'Prioritize accuracy and completeness — the consumer may not be able to ask follow-ups',
+    'Use professional, objective tone',
+    'For research tasks, be thorough — include all relevant data points',
+    'Never ask clarifying questions — work with what you have',
+    'If data is incomplete, note what\'s missing and answer with what you have',
+  ],
+  responseFormat: [
+    'Use markdown formatting — the consumer will parse it',
+    'Use tables for comparative data',
+    'Use headers to organize long responses',
+    'Include specific numbers and data points',
+    'Lead with the key finding, then supporting detail',
+  ],
+  tables: `Use standard markdown tables.
+
+| Ticker | Rev    | OM  |
+|--------|--------|-----|
+| AAPL   | 416.2B | 31% |
+
+Keep tables well-structured with clear headers.`,
+};
+
 /** Registry of channel profiles. Add new channels here. */
 const CHANNEL_PROFILES: Record<string, ChannelProfile> = {
   cli: CLI_PROFILE,
   whatsapp: WHATSAPP_PROFILE,
+  api: API_PROFILE,
 };
 
 /** Resolve the profile for a channel, falling back to CLI. */

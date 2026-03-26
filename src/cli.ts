@@ -35,6 +35,43 @@ function truncateAtWord(str: string, maxLength: number): string {
   return `${str.slice(0, maxLength)}...`;
 }
 
+/** Map sub-tool function names to human-readable provider labels */
+const SUB_TOOL_PROVIDERS: Record<string, string> = {
+  get_stock_price: 'Polygon',
+  get_stock_prices: 'Polygon',
+  get_stock_tickers: 'Polygon',
+  get_crypto_price_snapshot: 'Polygon',
+  get_crypto_prices: 'Polygon',
+  get_crypto_tickers: 'Polygon',
+  get_income_statements: 'Polygon',
+  get_balance_sheets: 'Polygon',
+  get_cash_flow_statements: 'Polygon',
+  get_all_financial_statements: 'Polygon',
+  get_company_news: 'Polygon',
+  get_key_metrics: 'FMP',
+  get_key_metrics_snapshot: 'FMP',
+  get_analyst_estimates: 'FMP',
+  get_earnings: 'FMP',
+  get_revenue_segments: 'FMP',
+  get_insider_trades: 'Finnhub',
+  get_filings: 'EDGAR',
+  get_filing_sections: 'EDGAR',
+  screen_stocks: 'FMP',
+};
+
+function describeSubTools(keys: string[]): string {
+  // keys look like "get_income_statements" or "get_stock_price_AAPL"
+  const sources: string[] = [];
+  for (const key of keys) {
+    // Strip trailing _TICKER suffix to match the base tool name
+    const baseName = key.replace(/_[A-Z]{1,5}$/, '');
+    const provider = SUB_TOOL_PROVIDERS[baseName];
+    const label = baseName.replace(/^get_/, '').replace(/_/g, ' ');
+    sources.push(provider ? `${label} (${provider})` : label);
+  }
+  return sources.join(', ');
+}
+
 function summarizeToolResult(tool: string, args: Record<string, unknown>, result: string): string {
   if (tool === 'skill') {
     const skillName = args.skill as string;
@@ -49,7 +86,8 @@ function summarizeToolResult(tool: string, args: Record<string, unknown>, result
       if (typeof parsed.data === 'object') {
         const keys = Object.keys(parsed.data).filter((key) => !key.startsWith('_'));
         if (tool === 'get_financials' || tool === 'get_market_data' || tool === 'stock_screener') {
-          return keys.length === 1 ? 'Called 1 data source' : `Called ${keys.length} data sources`;
+          if (keys.length === 0) return 'Called 0 data sources';
+          return `Queried ${describeSubTools(keys)}`;
         }
         if (tool === 'web_search') {
           return 'Did 1 search';
