@@ -6,6 +6,7 @@ import { ArrowUp, Bot, Wrench, User } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { AgentShowcase } from "../components/AgentShowcase";
 
 interface Message {
   id: string;
@@ -17,13 +18,6 @@ let msgId = 0;
 function nextId() {
   return `msg-${++msgId}`;
 }
-
-const exampleQueries = [
-  { heading: "Run a DCF", message: "Run a DCF on AAPL with conservative assumptions" },
-  { heading: "Portfolio review", message: "How does my portfolio look?" },
-  { heading: "Stock analysis", message: "Should I buy SHOP at current levels?" },
-  { heading: "Screen stocks", message: "Screen for undervalued tech stocks with strong cash flow" },
-];
 
 export function ChatView() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -112,35 +106,8 @@ export function ChatView() {
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className={cn("mx-auto max-w-2xl px-4", messages.length > 0 ? "pt-6 pb-52" : "pt-0 pb-0")}>
-          {/* Empty state */}
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Bot className="h-8 w-8" />
-              </div>
-              <div className="text-center">
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                  Dexter
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground max-w-md">
-                  Your AI-powered financial research agent. Ask about portfolios, run valuations, screen stocks, or explore markets.
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2 w-full max-w-lg">
-                {exampleQueries.map((ex) => (
-                  <button
-                    key={ex.heading}
-                    type="button"
-                    onClick={() => send(ex.message)}
-                    className="rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
-                  >
-                    <div className="text-sm font-medium text-foreground">{ex.heading}</div>
-                    <div className="mt-1 text-xs text-muted-foreground line-clamp-2">{ex.message}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Empty state — agent showcase */}
+          {messages.length === 0 && <AgentShowcase onSend={send} />}
 
           {/* Message list */}
           {messages.map((msg) => (

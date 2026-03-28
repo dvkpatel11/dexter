@@ -5,12 +5,14 @@ import { HealthView } from "./views/HealthView";
 import { PortfolioView } from "./views/PortfolioView";
 import { SignalsView } from "./views/SignalsView";
 import { TradeView } from "./views/TradeView";
+import { SettingsView } from "./views/SettingsView";
 import {
   LayoutDashboard,
   MessageSquare,
   LineChart,
   ArrowLeftRight,
   Activity,
+  Settings,
 } from "lucide-react";
 
 const navItems = [
@@ -19,6 +21,7 @@ const navItems = [
   { to: "/signals", label: "Signals", icon: LineChart, preview: true },
   { to: "/trade", label: "Trade", icon: ArrowLeftRight, preview: true },
   { to: "/health", label: "Health", icon: Activity, preview: true },
+  { to: "/settings", label: "Settings", icon: Settings },
 ];
 
 function App() {
@@ -91,6 +94,7 @@ function App() {
               <Route path="/trade" element={<TradeView />} />
               <Route path="/signals" element={<SignalsView />} />
               <Route path="/health" element={<HealthView />} />
+              <Route path="/settings" element={<SettingsView />} />
             </Routes>
           </div>
         </main>

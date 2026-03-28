@@ -17,6 +17,37 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+// ── Settings ─────────────────────────────────────────────────────────────
+
+export interface DexterSettings {
+  provider?: string;
+  modelId?: string;
+  memory?: {
+    enabled?: boolean;
+    embeddingProvider?: string;
+    embeddingModel?: string;
+    maxSessionContextTokens?: number;
+  };
+  search?: {
+    provider?: string;
+    numResults?: number;
+    highlights?: boolean;
+  };
+  _keyStatus?: Record<string, boolean>;
+  [key: string]: unknown;
+}
+
+export function fetchSettings() {
+  return request<DexterSettings>('/settings');
+}
+
+export function updateSettings(settings: Partial<DexterSettings>) {
+  return request<{ ok: boolean }>('/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
+}
+
 // ── Providers & Models ───────────────────────────────────────────────────
 
 export interface ProviderInfo {
