@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { streamAgent } from '../api/client'
+import { ModelSelector } from '../components/ModelSelector'
 
 interface Message {
   role: 'user' | 'assistant' | 'tool'
@@ -10,6 +11,7 @@ export function ChatView() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [model, setModel] = useState('')
   const abortRef = useRef<AbortController | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -50,7 +52,7 @@ export function ChatView() {
         setLoading(false)
       }
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, 'dashboard')
+    }, 'dashboard', model || undefined)
 
     abortRef.current = controller
   }
@@ -77,17 +79,22 @@ export function ChatView() {
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="chat-input-bar">
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && send()}
-          placeholder="Ask Dexter..."
-          disabled={loading}
-        />
-        <button onClick={send} disabled={loading || !input.trim()}>
-          Send
-        </button>
+      <div className="chat-input-area">
+        <div className="chat-input-toolbar">
+          <ModelSelector value={model} onChange={setModel} />
+        </div>
+        <div className="chat-input-bar">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && send()}
+            placeholder="Ask Dexter..."
+            disabled={loading}
+          />
+          <button onClick={send} disabled={loading || !input.trim()}>
+            Send
+          </button>
+        </div>
       </div>
     </div>
   )
