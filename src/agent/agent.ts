@@ -33,6 +33,7 @@ export class Agent {
   private readonly systemPrompt: string;
   private readonly signal?: AbortSignal;
   private readonly memoryEnabled: boolean;
+  private readonly runId?: string;
 
   private constructor(
     config: AgentConfig,
@@ -47,6 +48,7 @@ export class Agent {
     this.systemPrompt = systemPrompt;
     this.signal = config.signal;
     this.memoryEnabled = config.memoryEnabled ?? true;
+    this.runId = config.runId;
   }
 
   /**
@@ -86,11 +88,11 @@ export class Agent {
     const startTime = Date.now();
 
     if (this.tools.length === 0) {
-      yield { type: 'done', answer: 'No tools available. Please check your API key configuration.', toolCalls: [], iterations: 0, totalTime: Date.now() - startTime };
+      yield { type: 'done', answer: 'No tools available. Please check your API key configuration.', toolCalls: [], iterations: 0, totalTime: Date.now() - startTime, runId: this.runId };
       return;
     }
 
-    const ctx = createRunContext(query);
+    const ctx = createRunContext(query, this.runId);
     const memoryFlushState = { alreadyFlushed: false };
 
     // Build initial prompt with conversation history context
@@ -139,6 +141,7 @@ export class Agent {
             totalTime,
             tokenUsage: ctx.tokenCounter.getUsage(),
             tokensPerSecond: ctx.tokenCounter.getTokensPerSecond(totalTime),
+            runId: this.runId,
           };
           return;
         }
@@ -173,6 +176,7 @@ export class Agent {
             totalTime,
             tokenUsage: ctx.tokenCounter.getUsage(),
             tokensPerSecond: ctx.tokenCounter.getTokensPerSecond(totalTime),
+            runId: this.runId,
           };
           return;
         }
@@ -197,6 +201,7 @@ export class Agent {
       totalTime,
       tokenUsage: ctx.tokenCounter.getUsage(),
       tokensPerSecond: ctx.tokenCounter.getTokensPerSecond(totalTime),
+      runId: this.runId,
     };
   }
 
@@ -211,6 +216,7 @@ export class Agent {
       systemPrompt: this.systemPrompt,
       tools: useTools ? this.tools : undefined,
       signal: this.signal,
+      runId: this.runId,
     });
     return { response: result.response, usage: result.usage };
   }
@@ -231,6 +237,7 @@ export class Agent {
       totalTime,
       tokenUsage: ctx.tokenCounter.getUsage(),
       tokensPerSecond: ctx.tokenCounter.getTokensPerSecond(totalTime),
+      runId: this.runId,
     };
   }
 

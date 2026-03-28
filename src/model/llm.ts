@@ -144,6 +144,7 @@ interface CallLlmOptions {
   outputSchema?: z.ZodType<unknown>;
   tools?: StructuredToolInterface[];
   signal?: AbortSignal;
+  runId?: string;
 }
 
 export interface LlmResult {
@@ -214,7 +215,13 @@ export async function callLlm(prompt: string, options: CallLlmOptions = {}): Pro
     runnable = llm.bindTools(tools);
   }
 
-  const invokeOpts = signal ? { signal } : undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const invokeOpts: Record<string, any> = signal ? { signal } : {};
+  if (options.runId) {
+    invokeOpts.runId = options.runId;
+    invokeOpts.tags = ['dexter-api'];
+  }
+
   const provider = resolveProvider(model);
   let result;
 
