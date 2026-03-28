@@ -10,6 +10,7 @@
  * Modeled after gateway/agent-runner.ts but without WhatsApp-specific logic.
  */
 
+import crypto from 'node:crypto';
 import { Agent } from './agent/agent.js';
 import type { AgentConfig, AgentEvent, ApprovalDecision, DoneEvent, TokenUsage } from './agent/types.js';
 import { InMemoryChatHistory } from './utils/in-memory-chat-history.js';
@@ -43,9 +44,13 @@ export interface RunOptions {
   memory?: boolean;
   /** Session key for conversation continuity — same key = shared history */
   sessionKey?: string;
+  /** Unique execution trace ID for LangSmith/observability */
+  runId?: string;
 }
 
 export interface RunResult {
+  /** Unique execution trace ID for LangSmith/observability */
+  runId?: string;
   /** The agent's final answer text */
   answer: string;
   /** All events emitted during execution */
@@ -126,6 +131,8 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
     sessionKey,
   } = options;
 
+  const runId = options.runId ?? crypto.randomUUID();
+
   // Resolve approval handler
   const requestToolApproval = typeof approvalMode === 'function'
     ? approvalMode
@@ -145,6 +152,7 @@ export async function runAgent(options: RunOptions): Promise<RunResult> {
     requestToolApproval,
     sessionApprovedTools,
     memoryEnabled: memory,
+    runId,
   };
 
   // If sessionKey provided, serialize turns per session
@@ -186,6 +194,7 @@ async function executeAgent(
   }
 
   return {
+    runId: done?.runId ?? config.runId,
     answer: done?.answer ?? '',
     events,
     iterations: done?.iterations ?? 0,

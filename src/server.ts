@@ -127,6 +127,7 @@ async function handleQuery(req: Request): Promise<Response> {
     );
 
     return json({
+      runId: result.runId,
       answer: result.answer,
       iterations: result.iterations,
       totalTime: result.totalTime,
@@ -175,6 +176,7 @@ async function handleQueryStream(req: Request): Promise<Response> {
         });
 
         send("result", {
+          runId: result.runId,
           answer: result.answer,
           iterations: result.iterations,
           totalTime: result.totalTime,
