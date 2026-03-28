@@ -50,7 +50,8 @@ export class AgentToolExecutor {
       const toolName = toolCall.name;
       const toolArgs = toolCall.args as Record<string, unknown>;
 
-      // Deduplicate skill calls - each skill can only run once per query
+      // Deduplicate: prevent the *same* skill from running twice per query,
+      // but allow chaining *different* skills (e.g., dcf → comps → sentiment).
       if (toolName === 'skill') {
         const skillName = toolArgs.skill as string;
         if (ctx.scratchpad.hasExecutedSkill(skillName)) continue;

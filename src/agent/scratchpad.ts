@@ -52,6 +52,11 @@ const DEFAULT_LIMIT_CONFIG: ToolLimitConfig = {
   similarityThreshold: 0.7,
 };
 
+/** Per-tool limit overrides (skill calls are higher to support chaining) */
+const TOOL_LIMIT_OVERRIDES: Record<string, number> = {
+  skill: 8,
+};
+
 /**
  * Append-only scratchpad for tracking agent work on a query.
  * Uses JSONL format (newline-delimited JSON) for resilient appending.
@@ -125,7 +130,7 @@ export class Scratchpad {
    */
   canCallTool(toolName: string, query?: string): { allowed: boolean; warning?: string } {
     const currentCount = this.toolCallCounts.get(toolName) ?? 0;
-    const maxCalls = this.limitConfig.maxCallsPerTool;
+    const maxCalls = TOOL_LIMIT_OVERRIDES[toolName] ?? this.limitConfig.maxCallsPerTool;
 
     // Check if over the suggested limit - warn but allow
     if (currentCount >= maxCalls) {
@@ -193,7 +198,7 @@ export class Scratchpad {
     const statuses: ToolUsageStatus[] = [];
     
     for (const [toolName, callCount] of this.toolCallCounts) {
-      const maxCalls = this.limitConfig.maxCallsPerTool;
+      const maxCalls = TOOL_LIMIT_OVERRIDES[toolName] ?? this.limitConfig.maxCallsPerTool;
       const remainingCalls = Math.max(0, maxCalls - callCount);
       const recentQueries = this.toolQueries.get(toolName) ?? [];
       const overLimit = callCount >= maxCalls;

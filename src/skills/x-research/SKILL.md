@@ -8,61 +8,72 @@ description: >
   public opinion on a stock, sector, company, or market event.
 ---
 
-# X Research Skill
+# X Research
 
-Agentic research over X/Twitter using the `x_search` tool. Decompose the
-research question into targeted searches, iterate to refine signal, and
-synthesize into a sourced sentiment briefing.
+> *"The stock market is a device for transferring money from the impatient to the patient."* — Buffett
+
+The crowd is data, not direction. X is the modern trading floor — raw, unfiltered, and
+full of noise. The skill is in separating signal from performance. A viral bearish thread
+is not evidence of overvaluation any more than a bullish meme is evidence of a moat.
+
+We study sentiment the way an anthropologist studies a tribe: with genuine curiosity,
+healthy distance, and zero desire to join the dance. The goal is not to follow the crowd
+or to be contrarian for its own sake — it is to understand what the crowd believes and
+then independently assess whether that belief is priced in, mispriced, or irrelevant.
+
+George Soros understood reflexivity — that market narratives change fundamentals and
+fundamentals change narratives. X is where those narratives form in real time. We watch
+the formation, not to follow it, but to understand the feedback loop.
+
+---
 
 ## Research Loop
 
 ### 1. Decompose into Queries
 
-Turn the research question into 3–5 targeted queries using X operators:
+Turn the research question into 3-5 targeted queries using X operators:
 
 - **Core query**: Direct keywords or `$TICKER` cashtag
 - **Expert voices**: `from:username` for known analysts or accounts
 - **Bearish signal**: keywords like `(overvalued OR bubble OR risk OR concern)`
 - **Bullish signal**: keywords like `(bullish OR upside OR catalyst OR beat)`
 - **News/links**: add `has:links` to surface tweets with sources
-- **Noise reduction**: `-is:reply` to focus on original posts; `-airdrop -giveaway` for crypto topics
+- **Noise reduction**: `-is:reply` to focus on original posts; `-airdrop -giveaway` for crypto
 
 ### 2. Execute Searches
 
-Use the `x_search` tool with `command: "search"`. For each query:
+Use `x_search` with `command: "search"`. For each query:
 
-- Start with `sort: "likes"` and `limit: 15` to surface highest-signal tweets
-- Add `min_likes: 5` or higher to filter noise for broad topics
-- Use `since: "1d"` or `"7d"` depending on how time-sensitive the topic is
-- If a query returns too much noise, narrow with more operators or raise `min_likes`
-- If too few results, broaden with `OR` terms or remove restrictive operators
+- Start with `sort: "likes"` and `limit: 15` for highest-signal tweets
+- Add `min_likes: 5` or higher to filter noise on broad topics
+- Use `since: "1d"` or `"7d"` depending on time sensitivity
+- If too noisy → narrow operators or raise `min_likes`
+- If too few results → broaden with `OR` or remove restrictive operators
 
 ### 3. Check Key Accounts (Optional)
 
-For well-known analysts, fund managers, or company executives, use
-`command: "profile"` to see their recent posts directly.
+For known analysts, fund managers, or executives, use `command: "profile"` to see
+recent posts directly.
 
 ### 4. Follow Threads (Optional)
 
-When a high-engagement tweet appears to be a thread starter, use
-`command: "thread"` with the tweet ID to get full context.
+High-engagement thread starters → use `command: "thread"` with tweet ID for full context.
 
 ### 5. Synthesize
 
-Group findings by theme (bullish, bearish, neutral, news/catalysts):
+Group by theme (bullish, bearish, neutral, catalysts). For each:
 
 ```
 ### [Theme]
 
-[1–2 sentence summary of the theme]
+[1-2 sentence summary]
 
-- @username: "[key quote]" — [likes]♥ [Tweet](url)
-- @username2: "[another perspective]" — [likes]♥ [Tweet](url)
+- @username: "[key quote]" — [likes] [Tweet](url)
+- @username2: "[perspective]" — [likes] [Tweet](url)
 ```
 
-End with an **Overall Sentiment** paragraph: predominant tone (bullish/bearish/
-mixed/neutral), confidence level, and any notable divergence between retail and
-institutional voices.
+End with **Overall Sentiment**: predominant tone, confidence level, and divergence
+between retail and institutional voices.
 
 ## Refinement Heuristics
 
@@ -74,11 +85,10 @@ institutional voices.
 | Want expert takes only | Use `from:` or `min_likes: 50` |
 | Want substance over hot takes | Add `has:links` |
 
-## Output Format
+## Output
 
-Present a structured briefing:
-
-1. **Query Summary**: what was searched and time window
-2. **Sentiment Themes**: grouped findings with sourced quotes and tweet links
-3. **Overall Sentiment**: tone, confidence, key voices
-4. **Caveats**: X sentiment is not a reliable predictor; sample bias toward vocal minorities; last-7-days window only
+1. **Query Summary** — what was searched and time window
+2. **Sentiment Themes** — grouped findings with sourced quotes and tweet links
+3. **Overall Sentiment** — tone, confidence, key voices
+4. **Reflexivity Check** — is the narrative *driving* price action or *reacting to* it? This distinction matters.
+5. **Caveats** — X sentiment is not predictive; sample bias toward vocal minorities; recency bias; bots exist

@@ -14,6 +14,7 @@ import { SCREEN_STOCKS_DESCRIPTION } from './finance/screen-stocks.js';
 import { heartbeatTool, HEARTBEAT_TOOL_DESCRIPTION } from './heartbeat/heartbeat-tool.js';
 import { memoryGetTool, memorySearchTool, memoryUpdateTool, MEMORY_GET_DESCRIPTION, MEMORY_SEARCH_DESCRIPTION, MEMORY_UPDATE_DESCRIPTION } from './memory/index.js';
 import { exaSearch, perplexitySearch, tavilySearch, WEB_SEARCH_DESCRIPTION, xSearchTool, X_SEARCH_DESCRIPTION } from './search/index.js';
+import { calculatorTool, CALCULATOR_DESCRIPTION } from './math/calculator.js';
 import { skillTool, SKILL_TOOL_DESCRIPTION } from './skill.js';
 
 /**
@@ -123,6 +124,11 @@ export function getToolRegistry(model: string, searchDescription?: string | null
       name: 'memory_update',
       tool: memoryUpdateTool,
       description: MEMORY_UPDATE_DESCRIPTION,
+    },
+    {
+      name: 'calculator',
+      tool: calculatorTool,
+      description: CALCULATOR_DESCRIPTION,
     },
   ];
 

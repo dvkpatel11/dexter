@@ -25,6 +25,7 @@ import type { AgentEvent } from "./agent/types.js";
 import { PROVIDERS } from "./providers.js";
 import type { RunOptions } from "./runner.js";
 import { clearSession, runAgent } from "./runner.js";
+import * as portfolio from "./portfolio/routes.js";
 import { logger } from "./utils/logger.js";
 import { getModelsForProvider } from "./utils/model.js";
 
@@ -64,7 +65,7 @@ function cors(): Response {
     status: 204,
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
   });
@@ -286,6 +287,102 @@ async function handleRequest(req: Request): Promise<Response> {
       return handleClearSession(decodeURIComponent(sessionMatch[1]));
     }
 
+    // ── Portfolio: SnapTrade ──────────────────────────────────────────────
+    if (method === "GET" && path === "/api/portfolio/snapshot") {
+      return await portfolio.handleGetPortfolioSnapshot();
+    }
+    if (method === "GET" && path === "/api/portfolio/accounts") {
+      return await portfolio.handleListAccounts();
+    }
+    const positionsMatch = path.match(/^\/api\/portfolio\/accounts\/([^/]+)\/positions$/);
+    if (method === "GET" && positionsMatch) {
+      return await portfolio.handleGetPositions(positionsMatch[1]);
+    }
+    if (method === "GET" && path === "/api/portfolio/positions") {
+      return await portfolio.handleGetAllPositions();
+    }
+    const balanceMatch = path.match(/^\/api\/portfolio\/accounts\/([^/]+)\/balance$/);
+    if (method === "GET" && balanceMatch) {
+      return await portfolio.handleGetBalance(balanceMatch[1]);
+    }
+    const ordersMatch = path.match(/^\/api\/portfolio\/accounts\/([^/]+)\/orders$/);
+    if (method === "GET" && ordersMatch) {
+      return await portfolio.handleListOrders(ordersMatch[1], url.searchParams.get("state") ?? undefined);
+    }
+    const txMatch = path.match(/^\/api\/portfolio\/accounts\/([^/]+)\/transactions$/);
+    if (method === "GET" && txMatch) {
+      return await portfolio.handleListTransactions(txMatch[1], url);
+    }
+    if (method === "POST" && path === "/api/portfolio/orders/impact") {
+      return await portfolio.handleGetOrderImpact(req);
+    }
+    if (method === "POST" && path === "/api/portfolio/orders/execute") {
+      return await portfolio.handleExecuteOrder(req);
+    }
+    if (method === "POST" && path === "/api/portfolio/orders/cancel") {
+      return await portfolio.handleCancelOrder(req);
+    }
+    if (method === "GET" && path === "/api/portfolio/connect") {
+      return await portfolio.handleGetLoginUrl();
+    }
+    if (method === "GET" && path === "/api/portfolio/connections") {
+      return await portfolio.handleListConnections();
+    }
+
+    // ── Portfolio: Signals, Strategies, Alerts ────────────────────────────
+    if (method === "GET" && path === "/api/portfolio/signals") {
+      return await portfolio.handleListSignals(url);
+    }
+    if (method === "POST" && path === "/api/portfolio/signals") {
+      return await portfolio.handleCreateSignal(req);
+    }
+    const signalStatusMatch = path.match(/^\/api\/portfolio\/signals\/([^/]+)\/status$/);
+    if (method === "PATCH" && signalStatusMatch) {
+      return await portfolio.handleUpdateSignalStatus(signalStatusMatch[1], req);
+    }
+    if (method === "GET" && path === "/api/portfolio/strategies") {
+      return await portfolio.handleListStrategies(url);
+    }
+    if (method === "POST" && path === "/api/portfolio/strategies") {
+      return await portfolio.handleCreateStrategy(req);
+    }
+    const strategyStatusMatch = path.match(/^\/api\/portfolio\/strategies\/([^/]+)\/status$/);
+    if (method === "PATCH" && strategyStatusMatch) {
+      return await portfolio.handleUpdateStrategyStatus(strategyStatusMatch[1], req);
+    }
+    if (method === "GET" && path === "/api/portfolio/analyses") {
+      return await portfolio.handleListAnalyses(url);
+    }
+    if (method === "GET" && path === "/api/portfolio/alerts") {
+      return await portfolio.handleListAlerts(url);
+    }
+    const alertAckMatch = path.match(/^\/api\/portfolio\/alerts\/([^/]+)\/acknowledge$/);
+    if (method === "POST" && alertAckMatch) {
+      return await portfolio.handleAcknowledgeAlert(alertAckMatch[1]);
+    }
+
+    // ── Portfolio: Objectives & Allocation Targets ───────────────────────
+    if (method === "GET" && path === "/api/portfolio/objectives") {
+      return await portfolio.handleListObjectives();
+    }
+    if (method === "POST" && path === "/api/portfolio/objectives") {
+      return await portfolio.handleCreateObjective(req);
+    }
+    const objDeleteMatch = path.match(/^\/api\/portfolio\/objectives\/([^/]+)$/);
+    if (method === "DELETE" && objDeleteMatch) {
+      return await portfolio.handleDeleteObjective(objDeleteMatch[1]);
+    }
+    if (method === "GET" && path === "/api/portfolio/allocation-targets") {
+      return await portfolio.handleListAllocationTargets();
+    }
+    if (method === "POST" && path === "/api/portfolio/allocation-targets") {
+      return await portfolio.handleCreateAllocationTarget(req);
+    }
+    const allocUpdateMatch = path.match(/^\/api\/portfolio\/allocation-targets\/([^/]+)$/);
+    if (method === "PATCH" && allocUpdateMatch) {
+      return await portfolio.handleUpdateAllocationTarget(allocUpdateMatch[1], req);
+    }
+
     return error("Not found", 404);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -301,17 +398,28 @@ const server = Bun.serve({
 });
 
 console.log(`
-  ┌──────────────────────────────────────────────────┐
-  │  Dexter Microservice                             │
-  │  http://localhost:${String(PORT).padEnd(5)}                          │
-  │                                                  │
-  │  POST /api/query          Run agent (sync)       │
-  │  POST /api/query/stream   Run agent (SSE)        │
-  │  GET  /api/health         Health check           │
-  │  GET  /api/providers      List providers         │
-  │  GET  /api/models/:id     Models per provider    │
-  │  DELETE /api/sessions/:k  Clear session          │
-  └──────────────────────────────────────────────────┘
+  ┌──────────────────────────────────────────────────────┐
+  │  Dexter Microservice                                 │
+  │  http://localhost:${String(PORT).padEnd(5)}                              │
+  │                                                      │
+  │  Agent                                               │
+  │  POST /api/query              Run agent (sync)       │
+  │  POST /api/query/stream       Run agent (SSE)        │
+  │                                                      │
+  │  Portfolio (SnapTrade)                                │
+  │  GET  /api/portfolio/snapshot  Full portfolio view    │
+  │  GET  /api/portfolio/accounts  List accounts          │
+  │  POST /api/portfolio/orders/*  Trade execution       │
+  │                                                      │
+  │  Intelligence (Store)                                │
+  │  GET  /api/portfolio/signals   Active signals        │
+  │  GET  /api/portfolio/strategies Strategies           │
+  │  GET  /api/portfolio/alerts    Alerts                │
+  │                                                      │
+  │  System                                              │
+  │  GET  /api/health             Health check           │
+  │  GET  /api/providers          List providers         │
+  └──────────────────────────────────────────────────────┘
 `);
 
 logger.info(`[server] Listening on port ${PORT}`);

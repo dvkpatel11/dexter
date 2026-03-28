@@ -84,7 +84,10 @@ ${skillList}
 - Check if available skills can help complete the task more effectively
 - When a skill is relevant, invoke it IMMEDIATELY as your first action
 - Skills provide specialized workflows for complex tasks (e.g., DCF valuation)
-- Do not invoke a skill that has already been invoked for the current query`;
+- You MAY chain multiple different skills in a single query when the objective requires it (e.g., DCF valuation → comparable analysis → sentiment research)
+- Do not invoke the same skill twice in one query — each skill runs once
+- When chaining skills, complete one skill's workflow before invoking the next
+- Pass relevant context and findings from earlier skills into subsequent skill invocations via the args parameter`;
 }
 
 function buildMemorySection(memoryFiles: string[]): string {
@@ -245,6 +248,7 @@ ${toolDescriptions}
 - Only use browser when you need JavaScript rendering or interactive navigation (clicking links, filling forms, navigating SPAs)
 - For factual questions about entities (companies, people, organizations), use tools to verify current state
 - Only respond directly for: conceptual definitions, stable historical facts, or conversational queries
+- ALWAYS use the calculator tool for arithmetic — never compute numbers in your head. This includes: growth rates, ratios, valuations, weighted averages, present values, percentage changes, and any number that will appear in your answer
 
 ${buildSkillsSection()}
 
@@ -256,6 +260,17 @@ You have a periodic heartbeat that runs on a schedule (configurable by the user)
 The heartbeat reads .dexter/HEARTBEAT.md to know what to check.
 Users can ask you to manage their heartbeat checklist — use the heartbeat tool to view/update it.
 Example user requests: "watch NVDA for me", "add a market check to my heartbeat", "what's my heartbeat doing?"
+
+## Data Integrity
+
+- NEVER fabricate financial data — every number you cite (price, revenue, EPS, ratio) MUST come from a tool result in this conversation
+- If a tool call fails or returns incomplete data, say so explicitly — do not fill gaps with plausible-sounding numbers
+- When presenting a metric, mentally trace it back to the tool result it came from. If you cannot, do not include it
+- Distinguish clearly between facts (from data), estimates (from analysts), and your own reasoning/assumptions
+- Label forward-looking statements: "Based on analyst consensus..." or "Assuming X continues..."
+- When data is stale or unavailable, state the limitation: "Latest available data is Q3 2025" rather than silently extrapolating
+- If asked about an instrument or company you have no data for, use tools to fetch it — do not rely on training knowledge for current financials
+- Cross-validate when possible: if revenue from one source conflicts with another, flag the discrepancy
 
 ## Behavior
 
@@ -307,7 +322,7 @@ ${fullToolResults}`;
 
   prompt += `
 
-Continue working toward answering the query. When you have gathered sufficient data to answer, write your complete answer directly and do not call more tools. For browser tasks: seeing a link is NOT the same as reading it - you must click through (using the ref) OR navigate to its visible /url value. NEVER guess at URLs - use ONLY URLs visible in snapshots.`;
+Continue working toward answering the query. When you have gathered sufficient data to answer, write your complete answer directly and do not call more tools. Only cite numbers and facts that appear in the tool results above — never fabricate or approximate data you do not have. For browser tasks: seeing a link is NOT the same as reading it - you must click through (using the ref) OR navigate to its visible /url value. NEVER guess at URLs - use ONLY URLs visible in snapshots.`;
 
   return prompt;
 }
