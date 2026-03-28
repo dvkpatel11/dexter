@@ -17,12 +17,64 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+// ── Settings ─────────────────────────────────────────────────────────────
+
+export interface DexterSettings {
+  provider?: string;
+  modelId?: string;
+  memory?: {
+    enabled?: boolean;
+    embeddingProvider?: string;
+    embeddingModel?: string;
+    maxSessionContextTokens?: number;
+  };
+  search?: {
+    provider?: string;
+    numResults?: number;
+    highlights?: boolean;
+  };
+  _keyStatus?: Record<string, boolean>;
+  [key: string]: unknown;
+}
+
+export function fetchSettings() {
+  return request<DexterSettings>('/settings');
+}
+
+export function updateSettings(settings: Partial<DexterSettings>) {
+  return request<{ ok: boolean }>('/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
+}
+
+// ── Providers & Models ───────────────────────────────────────────────────
+
+export interface ProviderInfo {
+  id: string;
+  displayName: string;
+  hasKey: boolean;
+}
+
+export interface ModelInfo {
+  id: string;
+  displayName: string;
+}
+
+export function fetchProviders() {
+  return request<ProviderInfo[]>('/providers');
+}
+
+export function fetchModels(providerId: string) {
+  return request<ModelInfo[]>(`/models/${providerId}`);
+}
+
 // ── Agent ─────────────────────────────────────────────────────────────────
 
-export function queryAgent(query: string, sessionKey?: string) {
+export function queryAgent(query: string, sessionKey?: string, model?: string) {
   return request<{ answer: string; iterations: number; toolCalls: any[] }>('/query', {
     method: 'POST',
-    body: JSON.stringify({ query, sessionKey, approvalMode: 'auto-approve', memory: true }),
+    body: JSON.stringify({ query, sessionKey, model, approvalMode: 'auto-approve', memory: true }),
   });
 }
 
@@ -30,13 +82,14 @@ export function streamAgent(
   query: string,
   onEvent: (event: string, data: any) => void,
   sessionKey?: string,
+  model?: string,
 ): AbortController {
   const controller = new AbortController();
 
   fetch(`${BASE}/query/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, sessionKey, approvalMode: 'auto-approve', memory: true }),
+    body: JSON.stringify({ query, sessionKey, model, approvalMode: 'auto-approve', memory: true }),
     signal: controller.signal,
   }).then(async (res) => {
     const reader = res.body?.getReader();

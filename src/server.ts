@@ -26,6 +26,7 @@ import { PROVIDERS } from "./providers.js";
 import type { RunOptions } from "./runner.js";
 import { clearSession, runAgent } from "./runner.js";
 import * as portfolio from "./portfolio/routes.js";
+import { loadConfig, saveConfig } from "./utils/config.js";
 import { logger } from "./utils/logger.js";
 import { getModelsForProvider } from "./utils/model.js";
 
@@ -241,6 +242,35 @@ function handleClearSession(key: string): Response {
   return json({ cleared: key });
 }
 
+/** GET /api/settings */
+function handleGetSettings(): Response {
+  const config = loadConfig();
+  // Also include which API keys are configured (without exposing values)
+  const keyStatus: Record<string, boolean> = {};
+  for (const p of PROVIDERS) {
+    if (p.apiKeyEnvVar) {
+      keyStatus[p.id] = !!process.env[p.apiKeyEnvVar]?.trim();
+    } else {
+      keyStatus[p.id] = true; // e.g. Ollama needs no key
+    }
+  }
+  return json({ ...config, _keyStatus: keyStatus });
+}
+
+/** PUT /api/settings */
+async function handlePutSettings(req: Request): Promise<Response> {
+  const body = (await req.json()) as Record<string, unknown>;
+  const config = loadConfig();
+  // Merge top-level keys (don't allow overwriting _keyStatus)
+  for (const [key, value] of Object.entries(body)) {
+    if (key.startsWith("_")) continue;
+    (config as Record<string, unknown>)[key] = value;
+  }
+  const ok = saveConfig(config);
+  if (!ok) return error("Failed to save settings", 500);
+  return json({ ok: true });
+}
+
 // ── Router ───────────────────────────────────────────────────────────────────
 
 async function handleRequest(req: Request): Promise<Response> {
@@ -269,6 +299,14 @@ async function handleRequest(req: Request): Promise<Response> {
     const modelsMatch = path.match(/^\/api\/models\/(.+)$/);
     if (method === "GET" && modelsMatch) {
       return handleModels(modelsMatch[1]);
+    }
+
+    // Settings
+    if (method === "GET" && path === "/api/settings") {
+      return handleGetSettings();
+    }
+    if (method === "PUT" && path === "/api/settings") {
+      return await handlePutSettings(req);
     }
 
     // Query (sync)
