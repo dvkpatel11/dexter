@@ -54,6 +54,7 @@ import { getEarnings } from './earnings.js';
 import { getAnalystEstimates } from './estimates.js';
 import { getAllFinancialStatements, getBalanceSheets, getCashFlowStatements, getIncomeStatements } from './fundamentals.js';
 import { getHistoricalKeyRatios, getKeyRatios } from './key-ratios.js';
+import { getCompanyProfile } from './profile.js';
 import { getSegmentedRevenues } from './segments.js';
 
 // All finance tools available for routing
@@ -63,6 +64,7 @@ const FINANCE_TOOLS: StructuredToolInterface[] = [
   getBalanceSheets,
   getCashFlowStatements,
   getAllFinancialStatements,
+  getCompanyProfile,
   // Earnings
   getEarnings,
   // Key Ratios, Snapshots & Estimates
@@ -96,12 +98,13 @@ Given a user's natural language query about financial data, call the appropriate
    - "YTD" → report_period_gte Jan 1 of current year
 
 3. **Tool Selection**:
+   - For company profile, facts, sector, industry, market cap, CEO → get_company_profile
    - For latest financial metrics snapshot (P/E, margins, ROE, EPS, growth rates) → get_financial_metrics_snapshot
    - For historical P/E ratio, historical market cap, valuation metrics over time → get_key_ratios
    - For revenue, earnings, profitability → get_income_statements
    - For latest earnings release snapshot, EPS/revenue beat-miss, earnings surprises → get_earnings
    - For debt, assets, equity → get_balance_sheets
-   - For cash flow, free cash flow → get_cash_flow_statements
+   - For cash flow, free cash flow, capital expenditure (capex) → get_cash_flow_statements
    - For comprehensive analysis → get_all_financial_statements
 
 4. **Efficiency**:
