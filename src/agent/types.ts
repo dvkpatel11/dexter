@@ -55,6 +55,8 @@ export interface AgentConfig {
   sessionApprovedTools?: Set<string>;
   /** Enable/disable persistent memory integration for this run */
   memoryEnabled?: boolean;
+  /** Unique execution trace ID for LangSmith/observability */
+  runId?: string;
 }
 
 /**
@@ -195,6 +197,7 @@ export interface DoneEvent {
   totalTime: number;
   tokenUsage?: TokenUsage;
   tokensPerSecond?: number;
+  runId?: string;
 }
 
 /**

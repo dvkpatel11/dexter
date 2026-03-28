@@ -10,14 +10,16 @@ export interface RunContext {
   readonly tokenCounter: TokenCounter;
   readonly startTime: number;
   iteration: number;
+  readonly runId?: string;
 }
 
-export function createRunContext(query: string): RunContext {
+export function createRunContext(query: string, runId?: string): RunContext {
   return {
     query,
     scratchpad: new Scratchpad(query),
     tokenCounter: new TokenCounter(),
     startTime: Date.now(),
     iteration: 0,
+    runId,
   };
 }
