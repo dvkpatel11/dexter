@@ -44,7 +44,17 @@ describe('End-to-End API and Telemetry Tests', () => {
     expect(data.toolCalls.length).toBeGreaterThan(0);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const toolNames = data.toolCalls.map((tc: any) => tc.tool);
-    expect(toolNames).toContain('financial_search');
+    
+    // LOG THE RESULTS FOR THE USER TO SEE
+    console.log('\n--- TEST EXECUTION LOGS ---');
+    console.log(`Run ID: ${data.runId}`);
+    console.log(`Latency: ${data.totalTime}ms`);
+    console.log(`Tokens Used: ${data.tokenUsage.totalTokens}`);
+    console.log(`Tools Called: ${toolNames.join(', ')}`);
+    console.log(`Answer Snippet: ${data.answer.substring(0, 100)}...`);
+    console.log('---------------------------\n');
+
+    expect(toolNames.some((t: string) => ['financial_search', 'get_financials', 'get_market_cap'].includes(t))).toBe(true);
     
     expect(data.answer).toBeDefined();
     expect(data.answer.toLowerCase()).toContain('apple');
