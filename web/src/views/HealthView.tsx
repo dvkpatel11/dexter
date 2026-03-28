@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { intelligence } from "../api/client";
 import { cn } from "../lib/utils";
+import { PreviewBanner } from "../components/PreviewBanner";
 
 function Badge({ variant, children }: { variant: "green" | "red" | "yellow" | "blue" | "neutral"; children: React.ReactNode }) {
   const colors = {
@@ -37,6 +38,11 @@ export function HealthView() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      <PreviewBanner
+        title="Health"
+        description="Portfolio alerts and investment objectives. Alerts are generated automatically by Dexter as it monitors your positions and signals."
+        requirement="Set up investment objectives in Chat — alerts will appear as conditions are triggered."
+      />
       <div className="mb-6">
         <h2 className="text-2xl font-semibold tracking-tight">Health</h2>
         <p className="text-sm text-muted-foreground mt-1">Portfolio alerts, risk monitoring, and investment objectives</p>

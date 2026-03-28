@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { portfolio } from "../api/client";
 import { cn } from "../lib/utils";
+import { PreviewBanner } from "../components/PreviewBanner";
 
 function fmt(n: number): string {
   if (Math.abs(n) >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
@@ -26,7 +27,18 @@ export function PortfolioView() {
   }, []);
 
   if (loading) return <div className="flex items-center justify-center p-10 text-muted-foreground">Loading portfolio...</div>;
-  if (error) return <div className="m-6 p-4 rounded-lg bg-destructive/10 text-destructive text-sm">Failed to load portfolio: {error}. Make sure SnapTrade is configured.</div>;
+  if (error) return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <PreviewBanner
+        title="Portfolio"
+        description="Live brokerage data via SnapTrade integration. Connect your accounts to see positions, balances, and P&L."
+        requirement="Requires SNAPTRADE_CLIENT_ID and SNAPTRADE_CONSUMER_KEY environment variables."
+      />
+      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
+        {error}
+      </div>
+    </div>
+  );
 
   const positions = snapshot?.positions ?? [];
   const totalValue = snapshot?.totalValue ?? 0;
@@ -35,6 +47,11 @@ export function PortfolioView() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      <PreviewBanner
+        title="Portfolio"
+        description="Live brokerage data via SnapTrade integration. Connect your accounts to see positions, balances, and P&L."
+        requirement="Requires SNAPTRADE_CLIENT_ID and SNAPTRADE_CONSUMER_KEY environment variables."
+      />
       <div className="mb-6">
         <h2 className="text-2xl font-semibold tracking-tight">Portfolio</h2>
         <p className="text-sm text-muted-foreground mt-1">{snapshot?.accounts?.length ?? 0} accounts connected</p>

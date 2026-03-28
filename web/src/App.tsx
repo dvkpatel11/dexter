@@ -15,10 +15,10 @@ import {
 
 const navItems = [
   { to: "/", label: "Chat", icon: MessageSquare, end: true },
-  { to: "/portfolio", label: "Portfolio", icon: LayoutDashboard },
-  { to: "/signals", label: "Signals", icon: LineChart },
-  { to: "/trade", label: "Trade", icon: ArrowLeftRight },
-  { to: "/health", label: "Health", icon: Activity },
+  { to: "/portfolio", label: "Portfolio", icon: LayoutDashboard, preview: true },
+  { to: "/signals", label: "Signals", icon: LineChart, preview: true },
+  { to: "/trade", label: "Trade", icon: ArrowLeftRight, preview: true },
+  { to: "/health", label: "Health", icon: Activity, preview: true },
 ];
 
 function App() {
@@ -36,7 +36,7 @@ function App() {
             </span>
           </div>
           <nav className="flex flex-col gap-1 p-3">
-            {navItems.map(({ to, label, icon: Icon, end }) => (
+            {navItems.map(({ to, label, icon: Icon, end, preview }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -51,6 +51,11 @@ function App() {
               >
                 <Icon className="h-4 w-4" />
                 {label}
+                {preview && (
+                  <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    Preview
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>
