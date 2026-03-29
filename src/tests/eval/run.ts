@@ -1,23 +1,23 @@
 /**
  * LangSmith Evaluation Runner for Dexter
- * 
+ *
  * Usage:
  *   bun run src/evals/run.ts              # Run on all questions
  *   bun run src/evals/run.ts --sample 10  # Run on random sample of 10 questions
  */
 
-import { ProcessTerminal, TUI } from '@mariozechner/pi-tui';
-import 'dotenv/config';
-import fs from 'fs';
-import { Client } from 'langsmith';
-import type { EvaluationResult } from 'langsmith/evaluation';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { z } from 'zod';
-import { Agent } from '../agent/agent.js';
-import { getChatModel } from '../model/llm.js';
-import { getEvalConfig, getSetting } from '../utils/config.js';
-import { EvalApp, type EvalProgressEvent } from './components/index.js';
+import { ProcessTerminal, TUI } from "@mariozechner/pi-tui";
+import "dotenv/config";
+import fs from "fs";
+import { Client } from "langsmith";
+import type { EvaluationResult } from "langsmith/evaluation";
+import path from "path";
+import { fileURLToPath } from "url";
+import { z } from "zod";
+import { Agent } from "../../agent/agent.js";
+import { getChatModel } from "../../model/llm.js";
+import { getEvalConfig, getSetting } from "../../utils/config.js";
+import { EvalApp, type EvalProgressEvent } from "./components/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,10 +34,10 @@ interface Example {
 
 function parseCSV(csvContent: string): Example[] {
   const examples: Example[] = [];
-  const lines = csvContent.split('\n');
-  
+  const lines = csvContent.split("\n");
+
   let i = 1; // Skip header row
-  
+
   while (i < lines.length) {
     const result = parseRow(lines, i);
     if (result) {
@@ -45,7 +45,7 @@ function parseCSV(csvContent: string): Example[] {
       if (row.length >= 2 && row[0].trim()) {
         examples.push({
           inputs: { question: row[0] },
-          outputs: { answer: row[1] }
+          outputs: { answer: row[1] },
         });
       }
       i = nextIndex;
@@ -53,7 +53,7 @@ function parseCSV(csvContent: string): Example[] {
       i++;
     }
   }
-  
+
   return examples;
 }
 
@@ -61,20 +61,20 @@ function parseRow(lines: string[], startIndex: number): { row: string[]; nextInd
   if (startIndex >= lines.length || !lines[startIndex].trim()) {
     return null;
   }
-  
+
   const fields: string[] = [];
-  let currentField = '';
+  let currentField = "";
   let inQuotes = false;
   let lineIndex = startIndex;
   let charIndex = 0;
-  
+
   while (lineIndex < lines.length) {
     const line = lines[lineIndex];
-    
+
     while (charIndex < line.length) {
       const char = line[charIndex];
       const nextChar = line[charIndex + 1];
-      
+
       if (inQuotes) {
         if (char === '"' && nextChar === '"') {
           // Escaped quote
@@ -93,10 +93,10 @@ function parseRow(lines: string[], startIndex: number): { row: string[]; nextInd
           // Start of quoted field
           inQuotes = true;
           charIndex++;
-        } else if (char === ',') {
+        } else if (char === ",") {
           // End of field
           fields.push(currentField);
-          currentField = '';
+          currentField = "";
           charIndex++;
         } else {
           currentField += char;
@@ -104,10 +104,10 @@ function parseRow(lines: string[], startIndex: number): { row: string[]; nextInd
         }
       }
     }
-    
+
     if (inQuotes) {
       // Continue to next line (multi-line field)
-      currentField += '\n';
+      currentField += "\n";
       lineIndex++;
       charIndex = 0;
     } else {
@@ -116,7 +116,7 @@ function parseRow(lines: string[], startIndex: number): { row: string[]; nextInd
       return { row: fields, nextIndex: lineIndex + 1 };
     }
   }
-  
+
   // Handle case where file ends while in quotes
   if (currentField) {
     fields.push(currentField);
@@ -143,12 +143,12 @@ function shuffleArray<T>(array: T[]): T[] {
 
 async function target(inputs: { question: string }): Promise<{ answer: string }> {
   const evalConfig = getEvalConfig();
-  const targetModel = evalConfig.model ?? getSetting('modelId', 'gpt-5.4');
+  const targetModel = evalConfig.model ?? getSetting("modelId", "gpt-5.4");
   const agent = await Agent.create({ model: targetModel, maxIterations: 10 });
-  let answer = '';
+  let answer = "";
 
   for await (const event of agent.run(inputs.question)) {
-    if (event.type === 'done') {
+    if (event.type === "done") {
       answer = event.answer;
     }
   }
@@ -167,7 +167,7 @@ const EvaluatorOutputSchema = z.object({
 
 function getEvaluatorLlm() {
   const evalConfig = getEvalConfig();
-  const evaluatorModel = evalConfig.evaluatorModel ?? getSetting('modelId', 'gpt-5.4');
+  const evaluatorModel = evalConfig.evaluatorModel ?? getSetting("modelId", "gpt-5.4");
   const llm = getChatModel(evaluatorModel);
   return llm.withStructuredOutput(EvaluatorOutputSchema);
 }
@@ -180,8 +180,8 @@ async function correctnessEvaluator({
   outputs: Record<string, unknown>;
   referenceOutputs?: Record<string, unknown>;
 }): Promise<EvaluationResult> {
-  const actualAnswer = (outputs?.answer as string) || '';
-  const expectedAnswer = (referenceOutputs?.answer as string) || '';
+  const actualAnswer = (outputs?.answer as string) || "";
+  const expectedAnswer = (referenceOutputs?.answer as string) || "";
 
   const prompt = `You are evaluating the correctness of an AI assistant's answer to a financial question.
 
@@ -201,13 +201,13 @@ Evaluate and provide:
     const structuredLlm = getEvaluatorLlm();
     const result = await structuredLlm.invoke(prompt);
     return {
-      key: 'correctness',
+      key: "correctness",
       score: result.score,
       comment: result.comment,
     };
   } catch (error) {
     return {
-      key: 'correctness',
+      key: "correctness",
       score: 0,
       comment: `Evaluator error: ${error instanceof Error ? error.message : String(error)}`,
     };
@@ -221,8 +221,8 @@ Evaluate and provide:
 function createEvaluationRunner(sampleSize?: number) {
   return async function* runEvaluation(): AsyncGenerator<EvalProgressEvent, void, unknown> {
     // Load and parse dataset
-    const csvPath = path.join(__dirname, 'dataset', 'finance_agent.csv');
-    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    const csvPath = path.join(__dirname, "dataset", "finance_agent.csv");
+    const csvContent = fs.readFileSync(csvPath, "utf-8");
     let examples = parseCSV(csvContent);
     const totalCount = examples.length;
 
@@ -235,15 +235,13 @@ function createEvaluationRunner(sampleSize?: number) {
     const client = new Client();
 
     // Create a unique dataset name for this run (sampling creates different datasets)
-    const datasetName = sampleSize 
-      ? `dexter-finance-eval-sample-${sampleSize}-${Date.now()}`
-      : 'dexter-finance-eval';
+    const datasetName = sampleSize ? `dexter-finance-eval-sample-${sampleSize}-${Date.now()}` : "dexter-finance-eval";
 
     // Yield init event
     yield {
-      type: 'init',
+      type: "init",
       total: examples.length,
-      datasetName: sampleSize ? `finance_agent (sample ${sampleSize}/${totalCount})` : 'finance_agent',
+      datasetName: sampleSize ? `finance_agent (sample ${sampleSize}/${totalCount})` : "finance_agent",
     };
 
     // Check if dataset exists (only for full runs)
@@ -260,9 +258,9 @@ function createEvaluationRunner(sampleSize?: number) {
     // Create dataset if needed
     if (!dataset) {
       dataset = await client.createDataset(datasetName, {
-        description: sampleSize 
+        description: sampleSize
           ? `Finance agent evaluation (sample of ${sampleSize})`
-          : 'Finance agent evaluation dataset',
+          : "Finance agent evaluation dataset",
       });
 
       // Upload examples
@@ -282,7 +280,7 @@ function createEvaluationRunner(sampleSize?: number) {
 
       // Yield question start - UI shows this immediately
       yield {
-        type: 'question_start',
+        type: "question_start",
         question,
       };
 
@@ -300,8 +298,8 @@ function createEvaluationRunner(sampleSize?: number) {
 
       // Log to LangSmith for tracking
       await client.createRun({
-        name: 'dexter-eval-run',
-        run_type: 'chain',
+        name: "dexter-eval-run",
+        run_type: "chain",
         inputs: example.inputs,
         outputs,
         start_time: startTime,
@@ -319,16 +317,16 @@ function createEvaluationRunner(sampleSize?: number) {
 
       // Yield question end with result - UI updates progress bar
       yield {
-        type: 'question_end',
+        type: "question_end",
         question,
-        score: typeof evalResult.score === 'number' ? evalResult.score : 0,
-        comment: evalResult.comment || '',
+        score: typeof evalResult.score === "number" ? evalResult.score : 0,
+        comment: evalResult.comment || "",
       };
     }
 
     // Yield complete event
     yield {
-      type: 'complete',
+      type: "complete",
       experimentName,
     };
   };
@@ -341,7 +339,7 @@ function createEvaluationRunner(sampleSize?: number) {
 async function main() {
   // Parse CLI arguments
   const args = process.argv.slice(2);
-  const sampleIndex = args.indexOf('--sample');
+  const sampleIndex = args.indexOf("--sample");
   const sampleSize = sampleIndex !== -1 ? parseInt(args[sampleIndex + 1]) : undefined;
 
   // Create the evaluation runner with the sample size
